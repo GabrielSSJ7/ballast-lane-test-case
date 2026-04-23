@@ -1,26 +1,55 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { mutate } from "swr";
 import { useAuthStore } from "../../entities/user/model/store";
 import { useBooks } from "../../entities/book/api/useBooks";
+import { useBorrowings } from "../../entities/borrowing/api/useBorrowings";
 import { BookCard } from "../../entities/book/ui/BookCard";
 import { BookSearch } from "../../features/book-search/ui/BookSearch";
 import { Button } from "../../shared/ui/Button";
 import { Spinner } from "../../shared/ui/Spinner";
 import { useDebounce } from "../../shared/hooks/useDebounce";
+import { apiClient } from "../../shared/api/client";
+import { bookApi } from "../../entities/book/api/bookApi";
 import type { Book } from "../../entities/book/model/types";
 
 export function BooksListPage() {
   const user = useAuthStore((s) => s.user);
   const isLibrarian = user?.role === "librarian";
+  const isMember = user?.role === "member";
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading, error } = useBooks(debouncedSearch, page);
+  const { data: borrowingsData } = useBorrowings();
+  const borrowedBookIds = isMember && borrowingsData
+    ? new Set(borrowingsData.filter((b) => b.returned_at === null).map((b) => b.book_id))
+    : new Set<number>();
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setPage(1);
+  };
+
+  const handleBorrow = async (book: Book) => {
+    try {
+      await apiClient.post(`/api/v1/books/${book.id}/borrowings`);
+      await mutate("/api/v1/borrowings");
+      await mutate((key: unknown) => typeof key === "string" && key.startsWith("/api/v1/books"));
+    } catch {
+      // error handling omitted; button state will reflect the unchanged available_copies
+    }
+  };
+
+  const handleDelete = async (book: Book) => {
+    if (!confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
+    try {
+      await bookApi.delete(book.id);
+      await mutate((key: unknown) => typeof key === "string" && key.startsWith("/api/v1/books"));
+    } catch {
+      // error handling omitted
+    }
   };
 
   return (
@@ -63,7 +92,13 @@ export function BooksListPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {data.books.map((book: Book) => (
-                <BookCard key={book.id} book={book} />
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onBorrow={isMember ? handleBorrow : undefined}
+                  onDelete={isLibrarian ? handleDelete : undefined}
+                  alreadyBorrowed={borrowedBookIds.has(book.id)}
+                />
               ))}
             </div>
           )}

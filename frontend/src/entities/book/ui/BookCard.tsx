@@ -9,9 +9,10 @@ interface BookCardProps {
   book: Book;
   onBorrow?: (book: Book) => void;
   onDelete?: (book: Book) => void;
+  alreadyBorrowed?: boolean;
 }
 
-export function BookCard({ book, onBorrow, onDelete }: BookCardProps) {
+export function BookCard({ book, onBorrow, onDelete, alreadyBorrowed = false }: BookCardProps) {
   const user = useAuthStore((s) => s.user);
   const isLibrarian = user?.role === "librarian";
   const isMember = user?.role === "member";
@@ -34,14 +35,19 @@ export function BookCard({ book, onBorrow, onDelete }: BookCardProps) {
         </div>
         <p className="text-xs text-gray-400">ISBN: {book.isbn}</p>
         <div className="mt-auto flex gap-2 pt-2">
-          {isMember && available && onBorrow && (
-            <Button size="sm" onClick={() => onBorrow(book)} className="flex-1">
-              Borrow
-            </Button>
-          )}
           {isMember && !available && (
             <Button size="sm" variant="outline" disabled className="flex-1">
               Unavailable
+            </Button>
+          )}
+          {isMember && available && alreadyBorrowed && (
+            <Button size="sm" variant="outline" disabled className="flex-1">
+              Already Borrowed
+            </Button>
+          )}
+          {isMember && available && !alreadyBorrowed && onBorrow && (
+            <Button size="sm" onClick={() => onBorrow(book)} className="flex-1">
+              Borrow
             </Button>
           )}
           {isLibrarian && (
