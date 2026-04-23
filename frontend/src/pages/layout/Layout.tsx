@@ -1,6 +1,7 @@
 import { Link, Outlet } from "react-router";
 import { useAuthStore } from "../../entities/user/model/store";
 import { LogoutButton } from "../../features/auth-logout/ui/LogoutButton";
+import { BottomNav } from "./BottomNav";
 
 export function Layout() {
   const user = useAuthStore((s) => s.user);
@@ -46,9 +47,10 @@ export function Layout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-20 sm:px-6 md:pb-6 lg:px-8">
         <Outlet />
       </main>
+      <BottomNav />
     </div>
   );
 }
