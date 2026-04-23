@@ -22,7 +22,7 @@ RSpec.describe "Borrowings API", type: :request do
           as: :json
         body = JSON.parse(response.body)
         expect(body["book_id"]).to eq(book.id)
-        expect(body["user_id"]).to eq(member.id)
+        expect(body).not_to have_key("user_id")  # members don't see user_id
         expect(body["returned_at"]).to be_nil
         expect(body["due_at"]).to be_present
         expect(body["book"]).to be_present
@@ -150,6 +150,15 @@ RSpec.describe "Borrowings API", type: :request do
         body = JSON.parse(response.body)
         expect(body.first["book"]).to be_present
         expect(body.first["book"]["title"]).to be_present
+      end
+    end
+
+    context "librarian viewing a borrowing" do
+      it "includes user_id in the response" do
+        borrowing = create(:borrowing, user: member, book: book)
+        get "/api/v1/borrowings", headers: auth_headers(librarian)
+        body = JSON.parse(response.body)
+        expect(body.first["user_id"]).to eq(member.id)
       end
     end
   end

@@ -21,6 +21,7 @@ Rails.application.routes.draw do
           patch "return", action: :return_book
         end
       end
+      get "users/me", to: "users#me"
       namespace :dashboard do
         get :librarian
         get :member

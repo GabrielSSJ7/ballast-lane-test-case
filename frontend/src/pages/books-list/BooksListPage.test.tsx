@@ -85,10 +85,10 @@ describe("BooksListPage", () => {
       </MemoryRouter>
     )
 
-    // Spinner renders an svg or a role=status element; check by absence of book cards
+    // No book cards when loading
     expect(screen.queryByTestId("book-card")).not.toBeInTheDocument()
-    // The spinner container is rendered
-    expect(document.querySelector(".flex.justify-center")).toBeInTheDocument()
+    // Skeleton cards are rendered instead
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   it("renders book cards when data is available", async () => {

@@ -26,4 +26,13 @@ describe("useAuthStore", () => {
     expect(useAuthStore.getState().token).toBeNull();
     expect(useAuthStore.getState().user).toBeNull();
   });
+
+  it("setUser updates only the user without changing token", () => {
+    useAuthStore.getState().setAuth("test-token", { id: 1, name: "Alice", email: "a@a.com", role: "member" });
+    const newUser = { id: 1, name: "Alice Updated", email: "a@a.com", role: "member" as const };
+    useAuthStore.getState().setUser(newUser);
+    const { token, user } = useAuthStore.getState();
+    expect(token).toBe("test-token");
+    expect(user?.name).toBe("Alice Updated");
+  });
 });

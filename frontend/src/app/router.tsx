@@ -2,28 +2,33 @@ import { createBrowserRouter, redirect } from "react-router";
 import { useAuthStore } from "../entities/user/model/store";
 
 function requireAuth() {
-  const token = useAuthStore.getState().token;
-  if (!token) return redirect("/login");
+  const user = useAuthStore.getState().user;
+  if (!user) return redirect("/login");
   return null;
 }
 
 function requireLibrarian() {
-  const { token, user } = useAuthStore.getState();
-  if (!token) return redirect("/login");
-  if (user?.role !== "librarian") return redirect("/dashboard/member");
+  const { user } = useAuthStore.getState();
+  if (!user) return redirect("/login");
+  if (user.role !== "librarian") return redirect("/dashboard/member");
   return null;
 }
 
 function requireMember() {
-  const { token, user } = useAuthStore.getState();
-  if (!token) return redirect("/login");
-  if (user?.role !== "member") return redirect("/dashboard/librarian");
+  const { user } = useAuthStore.getState();
+  if (!user) return redirect("/login");
+  if (user.role !== "member") return redirect("/dashboard/librarian");
   return null;
 }
 
 export const router = createBrowserRouter([
   {
     path: "/login",
+    loader: () => {
+      const { user } = useAuthStore.getState();
+      if (user) return redirect(user.role === "librarian" ? "/dashboard/librarian" : "/dashboard/member");
+      return null;
+    },
     lazy: () =>
       import("../pages/login/LoginPage").then((m) => ({ Component: m.LoginPage })),
   },

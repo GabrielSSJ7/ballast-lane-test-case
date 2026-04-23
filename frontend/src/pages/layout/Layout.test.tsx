@@ -1,21 +1,32 @@
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import { MemoryRouter } from "react-router"
 import { Layout } from "./Layout"
 import { useAuthStore } from "../../entities/user/model/store"
+import { apiClient } from "../../shared/api/client"
 
 vi.mock("react-router", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-router")>()
-  return { ...actual, Outlet: () => <div data-testid="outlet-content" /> }
+  return { ...actual, Outlet: () => <div data-testid="outlet-content" />, useNavigate: () => vi.fn() }
 })
 
 vi.mock("../../features/auth-logout/ui/LogoutButton", () => ({
   LogoutButton: () => <button>Sign Out</button>,
 }))
 
+vi.mock("../../shared/api/client", () => ({
+  apiClient: { get: vi.fn() },
+  ApiError: class ApiError extends Error {
+    constructor(public status: number, public data: unknown) {
+      super(`API Error ${status}`);
+    }
+  },
+}))
+
 describe("Layout", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(apiClient.get).mockResolvedValue({ id: 1, name: "Alice", email: "a@a.com", role: "member" })
   })
 
   it("renders 'Library' heading/link", async () => {
@@ -48,15 +59,16 @@ describe("Layout", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Books" })).toBeInTheDocument()
+      const header = document.querySelector("header")!
+      expect(within(header).getByRole("link", { name: "Books" })).toHaveAttribute(
+        "href",
+        "/books"
+      )
     })
-    expect(screen.getByRole("link", { name: "Books" })).toHaveAttribute(
-      "href",
-      "/books"
-    )
   })
 
   it("shows librarian dashboard link for librarian role", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ id: 2, name: "Lib", email: "lib@lib.com", role: "librarian" })
     useAuthStore.setState({
       token: "t",
       user: { id: 2, name: "Lib", email: "lib@lib.com", role: "librarian" },
@@ -69,7 +81,8 @@ describe("Layout", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      const header = document.querySelector("header")!
+      expect(within(header).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
         "href",
         "/dashboard/librarian"
       )
@@ -89,7 +102,8 @@ describe("Layout", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      const header = document.querySelector("header")!
+      expect(within(header).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
         "href",
         "/dashboard/member"
       )

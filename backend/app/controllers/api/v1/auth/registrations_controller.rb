@@ -8,7 +8,7 @@ class Api::V1::Auth::RegistrationsController < Devise::RegistrationsController
       warden.set_user(resource, scope: :user, store: false)
       render json: UserSerializer.new(resource).as_json, status: :created
     else
-      render json: { errors: resource.errors }, status: :unprocessable_entity
+      render json: { error: "Registration failed. Please check your details." }, status: :unprocessable_entity
     end
   end
 

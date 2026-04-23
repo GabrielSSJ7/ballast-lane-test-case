@@ -98,9 +98,9 @@ describe("DashboardLibrarianPage", () => {
       </MemoryRouter>
     )
 
-    // When statsLoading=true the stat cards are not rendered
+    // When statsLoading=true the stat cards are replaced by skeletons
     expect(screen.queryByText("Total Books")).not.toBeInTheDocument()
-    expect(document.querySelector(".flex.justify-center")).toBeInTheDocument()
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   it("shows stat cards when stats are loaded", async () => {
@@ -170,7 +170,7 @@ describe("DashboardLibrarianPage", () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByLabelText("Loading")).toBeInTheDocument()
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   it("renders borrowing rows only for active borrowings (returned_at=null)", async () => {

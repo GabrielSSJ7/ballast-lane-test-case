@@ -45,8 +45,8 @@ RSpec.describe "Books API", type: :request do
     end
 
     it "returns book with available_copies field" do
-      book = create(:book, total_copies: 5)
-      get "/api/v1/books", headers: auth_headers(member)
+      book = create(:book, title: "AvailCopiesCheck", total_copies: 5)
+      get "/api/v1/books", params: { q: "AvailCopiesCheck" }, headers: auth_headers(member)
       body = JSON.parse(response.body)
       found = body["books"].find { |b| b["id"] == book.id }
       expect(found).to include("available_copies", "total_copies")

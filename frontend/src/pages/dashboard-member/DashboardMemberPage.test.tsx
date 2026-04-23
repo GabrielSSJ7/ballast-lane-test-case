@@ -74,9 +74,9 @@ describe("DashboardMemberPage", () => {
       </MemoryRouter>
     )
 
-    // When statsLoading=true, stat cards are not rendered
+    // When statsLoading=true, stat cards are replaced by skeletons
     expect(screen.queryByText("Currently Borrowing")).not.toBeInTheDocument()
-    expect(document.querySelector(".flex.justify-center")).toBeInTheDocument()
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   it("shows 'Currently Borrowing' and 'Overdue Books' stat cards", async () => {
@@ -148,7 +148,7 @@ describe("DashboardMemberPage", () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByLabelText("Loading")).toBeInTheDocument()
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   it("shows empty state when borrowings data is undefined (not yet resolved)", () => {

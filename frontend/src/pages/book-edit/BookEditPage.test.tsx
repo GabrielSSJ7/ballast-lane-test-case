@@ -82,11 +82,11 @@ describe("BookEditPage", () => {
       </MemoryRouter>
     )
 
-    // When isEditing && isLoading, the component returns only the spinner
+    // When isEditing && isLoading, the component returns only skeleton
     expect(screen.queryByText("Edit Book")).not.toBeInTheDocument()
     expect(screen.queryByText("Add New Book")).not.toBeInTheDocument()
-    // Spinner container is rendered
-    expect(document.querySelector(".flex.justify-center")).toBeInTheDocument()
+    // Skeleton is rendered instead of form
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   it("passes book to BookForm when in edit mode", async () => {

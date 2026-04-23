@@ -16,5 +16,9 @@ module LibraryApi
   class Application < Rails::Application
     config.load_defaults 8.0
     config.api_only = true
+
+    require_relative "../app/middleware/auth_cookie_middleware"
+    config.middleware.insert_before 0, AuthCookieMiddleware
+    config.middleware.use Rack::Attack
   end
 end

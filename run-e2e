@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# E2E test runner — backend RSpec + frontend Playwright
+set -euo pipefail
+
+MODE=${1:-all}  # backend | frontend | all
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+run_backend_e2e() {
+  echo "=== Backend E2E (RSpec) ==="
+  docker compose -f "$SCRIPT_DIR/docker-compose.e2e.yml" exec api bundle exec rails db:schema:load RAILS_ENV=test 2>&1
+  docker compose -f "$SCRIPT_DIR/docker-compose.e2e.yml" exec api bundle exec rspec spec/e2e/ --format documentation
+}
+
+run_frontend_e2e() {
+  echo "=== Frontend E2E (Playwright) ==="
+  cd "$SCRIPT_DIR/e2e/frontend"
+  [ ! -d node_modules ] && npm install
+  npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium
+  npx playwright test "$@"
+}
+
+case "$MODE" in
+  backend)  run_backend_e2e ;;
+  frontend) run_frontend_e2e "${@:2}" ;;
+  all)
+    run_backend_e2e
+    run_frontend_e2e
+    ;;
+esac

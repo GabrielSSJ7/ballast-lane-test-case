@@ -148,13 +148,13 @@ describe("RegisterForm", () => {
     expect(storedUser).toEqual({ id: 1, name: "Alice", email: "a@a.com", role: "member" })
   })
 
-  it("on error response: shows error from body.errors.email[0]", async () => {
+  it("on error response: shows generic error message", async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue({
       ok: false,
       status: 422,
       headers: { get: () => null },
-      json: () => Promise.resolve({ errors: { email: ["has already been taken"] } }),
+      json: () => Promise.resolve({ error: "Registration failed. Please check your details." }),
     })
 
     render(
@@ -169,7 +169,7 @@ describe("RegisterForm", () => {
     await user.click(screen.getByRole("button", { name: /create account/i }))
 
     await waitFor(() => {
-      expect(screen.getByText("has already been taken")).toBeInTheDocument()
+      expect(screen.getByText("Registration failed. Please check your details.")).toBeInTheDocument()
     })
     expect(mockNavigate).not.toHaveBeenCalled()
   })

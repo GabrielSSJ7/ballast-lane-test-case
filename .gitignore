@@ -16,7 +16,6 @@ backend/public/packs/
 backend/public/assets/
 backend/node_modules/
 backend/coverage/
-backend/Gemfile.lock
 
 # Frontend (Node)
 frontend/node_modules/

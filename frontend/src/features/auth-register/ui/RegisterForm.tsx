@@ -25,12 +25,14 @@ export function RegisterForm() {
       const res = await fetch(`${API_URL}/api/v1/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ user: data }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         const errorMsg =
+          body.error ??
           (body.errors?.email?.[0]) ??
           (body.errors?.password?.[0]) ??
           "Registration failed. Please try again.";

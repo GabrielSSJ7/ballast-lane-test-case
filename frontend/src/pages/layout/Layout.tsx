@@ -1,10 +1,28 @@
-import { Link, Outlet } from "react-router";
+import { useEffect } from "react";
+import { Link, Outlet, useNavigate } from "react-router";
 import { useAuthStore } from "../../entities/user/model/store";
 import { LogoutButton } from "../../features/auth-logout/ui/LogoutButton";
 import { BottomNav } from "./BottomNav";
+import { apiClient, ApiError } from "../../shared/api/client";
+import type { User } from "../../entities/user/model/types";
 
 export function Layout() {
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    apiClient
+      .get<User>("/api/v1/users/me")
+      .then((freshUser) => setUser(freshUser))
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 401) {
+          clearAuth();
+          navigate("/login");
+        }
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

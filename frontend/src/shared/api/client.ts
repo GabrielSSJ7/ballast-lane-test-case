@@ -42,7 +42,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const url = buildUrl(path, params);
   const headers = buildHeaders(extraHeaders);
 
-  const res = await fetch(url, { ...init, headers });
+  const res = await fetch(url, { ...init, headers, credentials: "include" });
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -80,6 +80,7 @@ export const apiClient = {
     return fetch(url, {
       method: "POST",
       headers,
+      credentials: "include",
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   },

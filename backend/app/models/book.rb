@@ -10,6 +10,10 @@ class Book < ApplicationRecord
   }
 
   def available_copies
-    total_copies - borrowings.active.count
+    if borrowings.loaded?
+      total_copies - borrowings.count { |b| b.returned_at.nil? }
+    else
+      total_copies - borrowings.active.count
+    end
   end
 end

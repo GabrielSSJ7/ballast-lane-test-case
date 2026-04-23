@@ -6,6 +6,7 @@ class Api::V1::BooksController < Api::V1::BaseController
     result = Books::Search.call(query: params[:q], page: params[:page])
     books = result.value[:books]
     pagy = result.value[:pagy]
+    ActiveRecord::Associations::Preloader.new(records: books.to_a, associations: :borrowings).call
     render json: {
       books: books.map { |b| BookSerializer.new(b).as_json },
       meta: {

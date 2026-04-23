@@ -78,8 +78,22 @@ docker compose run --rm web npm run test:ui
 .
 ├── backend/          # Rails 8 API
 ├── frontend/         # Vite + React 19 SPA
+├── docs/
+│   ├── implementations-phases/   # Per-phase delivery notes (see below)
+│   └── SECURITY-ANALYSIS.md      # Full threat model and findings
 ├── docker-compose.yml
 ├── README.md
 ├── GENAI.md          # GenAI exercise with critical evaluation
 └── PROMPT.md         # Original requirements
 ```
+
+## Implementation History
+
+Detailed notes for each delivery phase are in `docs/implementations-phases/`:
+
+| Document | Phase | Summary |
+|----------|-------|---------|
+| `PHASE1.md` | Phase 1 | Core full-stack app — Rails 8 API, React 19 SPA, auth, books, borrowings, dashboards |
+| `PHASE2.md` | Phase 2 | E2E test suite — RSpec request specs + Playwright browser tests, Docker Compose environment, seed data |
+| `PHASE3.md` | Phase 3 | Frontend UX improvements — skeleton screens, mobile bottom nav, password toggle, loading states |
+| `PHASE4.md` | Phase 4 | Security hardening — httpOnly cookie auth, rate limiting, CORS fix, Pundit safety net, N+1 fix, and more |
