@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ── colours ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
+
+pass() { echo -e "${GREEN}✓ $*${RESET}"; }
+fail() { echo -e "${RED}✗ $*${RESET}"; }
+info() { echo -e "${CYAN}▶ $*${RESET}"; }
+warn() { echo -e "${YELLOW}⚠ $*${RESET}"; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ── usage ─────────────────────────────────────────────────────────────────────
+usage() {
+  echo -e "${BOLD}Usage:${RESET}"
+  echo "  ./test              # run all test suites"
+  echo "  ./test backend      # run backend RSpec only"
+  echo "  ./test frontend     # run frontend Vitest only"
+  echo ""
+  echo -e "${BOLD}Options:${RESET}"
+  echo "  -v, --verbose       pass --format documentation to RSpec"
+  echo "  -h, --help          show this help"
+  exit 0
+}
+
+# ── arg parsing ───────────────────────────────────────────────────────────────
+TARGET="all"
+RSPEC_FORMAT="progress"
+
+for arg in "$@"; do
+  case "$arg" in
+    backend)  TARGET="backend" ;;
+    frontend) TARGET="frontend" ;;
+    -v|--verbose) RSPEC_FORMAT="documentation" ;;
+    -h|--help) usage ;;
+    *) warn "Unknown argument: $arg"; usage ;;
+  esac
+done
+
+# ── helpers ───────────────────────────────────────────────────────────────────
+ensure_db_running() {
+  info "Waiting for db service to be healthy…"
+  docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d db
+  local attempts=0
+  until docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T db \
+      pg_isready -U postgres -q 2>/dev/null; do
+    attempts=$((attempts + 1))
+    if [ $attempts -ge 20 ]; then
+      fail "Database did not become ready in time"
+      exit 1
+    fi
+    sleep 2
+  done
+  pass "Database is ready"
+}
+
+run_backend() {
+  echo ""
+  echo -e "${BOLD}════════════════════════════════════════${RESET}"
+  echo -e "${BOLD}  Backend — RSpec${RESET}"
+  echo -e "${BOLD}════════════════════════════════════════${RESET}"
+
+  ensure_db_running
+
+  if docker compose -f "$SCRIPT_DIR/docker-compose.yml" run --rm \
+      -e RAILS_ENV=test \
+      -e DATABASE_URL=postgresql://postgres:password@db/library_test \
+      api bundle exec rspec --format "$RSPEC_FORMAT"; then
+    pass "Backend tests passed"
+    return 0
+  else
+    fail "Backend tests failed"
+    return 1
+  fi
+}
+
+run_frontend() {
+  echo ""
+  echo -e "${BOLD}════════════════════════════════════════${RESET}"
+  echo -e "${BOLD}  Frontend — Vitest${RESET}"
+  echo -e "${BOLD}════════════════════════════════════════${RESET}"
+
+  # Prefer exec if web is already running, fall back to run
+  if docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps --status running \
+      | grep -q "web"; then
+    CMD="exec"
+  else
+    CMD="run --rm"
+  fi
+
+  if docker compose -f "$SCRIPT_DIR/docker-compose.yml" $CMD web npm test; then
+    pass "Frontend tests passed"
+    return 0
+  else
+    fail "Frontend tests failed"
+    return 1
+  fi
+}
+
+# ── main ──────────────────────────────────────────────────────────────────────
+BACKEND_EXIT=0
+FRONTEND_EXIT=0
+
+case "$TARGET" in
+  backend)
+    run_backend || BACKEND_EXIT=$?
+    ;;
+  frontend)
+    run_frontend || FRONTEND_EXIT=$?
+    ;;
+  all)
+    run_backend  || BACKEND_EXIT=$?
+    run_frontend || FRONTEND_EXIT=$?
+
+    echo ""
+    echo -e "${BOLD}════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}  Summary${RESET}"
+    echo -e "${BOLD}════════════════════════════════════════${RESET}"
+    [ $BACKEND_EXIT  -eq 0 ] && pass "Backend  — all green" || fail "Backend  — failures"
+    [ $FRONTEND_EXIT -eq 0 ] && pass "Frontend — all green" || fail "Frontend — failures"
+    ;;
+esac
+
+# Exit 1 if either suite failed
+[ $((BACKEND_EXIT + FRONTEND_EXIT)) -eq 0 ]
