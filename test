@@ -15,26 +15,33 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ── usage ─────────────────────────────────────────────────────────────────────
 usage() {
   echo -e "${BOLD}Usage:${RESET}"
-  echo "  ./test              # run all test suites"
-  echo "  ./test backend      # run backend RSpec only"
-  echo "  ./test frontend     # run frontend Vitest only"
+  echo "  ./test                   # run all test suites"
+  echo "  ./test backend           # run backend RSpec only"
+  echo "  ./test frontend          # run frontend Vitest only"
   echo ""
   echo -e "${BOLD}Options:${RESET}"
-  echo "  -v, --verbose       pass --format documentation to RSpec"
-  echo "  -h, --help          show this help"
+  echo "  -c, --coverage           collect coverage (HTML report in coverage/)"
+  echo "  -v, --verbose            verbose RSpec output (--format documentation)"
+  echo "  -h, --help               show this help"
+  echo ""
+  echo -e "${BOLD}Coverage reports:${RESET}"
+  echo "  backend/coverage/index.html"
+  echo "  frontend/coverage/index.html"
   exit 0
 }
 
 # ── arg parsing ───────────────────────────────────────────────────────────────
 TARGET="all"
 RSPEC_FORMAT="progress"
+COVERAGE=false
 
 for arg in "$@"; do
   case "$arg" in
-    backend)  TARGET="backend" ;;
-    frontend) TARGET="frontend" ;;
-    -v|--verbose) RSPEC_FORMAT="documentation" ;;
-    -h|--help) usage ;;
+    backend)       TARGET="backend" ;;
+    frontend)      TARGET="frontend" ;;
+    -c|--coverage) COVERAGE=true ;;
+    -v|--verbose)  RSPEC_FORMAT="documentation" ;;
+    -h|--help)     usage ;;
     *) warn "Unknown argument: $arg"; usage ;;
   esac
 done
@@ -59,16 +66,25 @@ ensure_db_running() {
 run_backend() {
   echo ""
   echo -e "${BOLD}════════════════════════════════════════${RESET}"
-  echo -e "${BOLD}  Backend — RSpec${RESET}"
+  if $COVERAGE; then
+    echo -e "${BOLD}  Backend — RSpec + Coverage${RESET}"
+  else
+    echo -e "${BOLD}  Backend — RSpec${RESET}"
+  fi
   echo -e "${BOLD}════════════════════════════════════════${RESET}"
 
   ensure_db_running
 
+  local extra_env=()
+  $COVERAGE && extra_env+=(-e COVERAGE=true)
+
   if docker compose -f "$SCRIPT_DIR/docker-compose.yml" run --rm \
       -e RAILS_ENV=test \
       -e DATABASE_URL=postgresql://postgres:password@db/library_test \
+      "${extra_env[@]}" \
       api bundle exec rspec --format "$RSPEC_FORMAT"; then
     pass "Backend tests passed"
+    $COVERAGE && info "Coverage report: backend/coverage/index.html"
     return 0
   else
     fail "Backend tests failed"
@@ -79,8 +95,15 @@ run_backend() {
 run_frontend() {
   echo ""
   echo -e "${BOLD}════════════════════════════════════════${RESET}"
-  echo -e "${BOLD}  Frontend — Vitest${RESET}"
+  if $COVERAGE; then
+    echo -e "${BOLD}  Frontend — Vitest + Coverage${RESET}"
+  else
+    echo -e "${BOLD}  Frontend — Vitest${RESET}"
+  fi
   echo -e "${BOLD}════════════════════════════════════════${RESET}"
+
+  local npm_script="test"
+  $COVERAGE && npm_script="test:coverage"
 
   # Prefer exec if web is already running, fall back to run
   if docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps --status running \
@@ -90,8 +113,9 @@ run_frontend() {
     CMD="run --rm"
   fi
 
-  if docker compose -f "$SCRIPT_DIR/docker-compose.yml" $CMD web npm test; then
+  if docker compose -f "$SCRIPT_DIR/docker-compose.yml" $CMD web npm run "$npm_script"; then
     pass "Frontend tests passed"
+    $COVERAGE && info "Coverage report: frontend/coverage/index.html"
     return 0
   else
     fail "Frontend tests failed"
