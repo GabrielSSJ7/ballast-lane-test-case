@@ -10,9 +10,11 @@ interface BookCardProps {
   onBorrow?: (book: Book) => void;
   onDelete?: (book: Book) => void;
   alreadyBorrowed?: boolean;
+  isBorrowLoading?: boolean;
+  isDeleteLoading?: boolean;
 }
 
-export function BookCard({ book, onBorrow, onDelete, alreadyBorrowed = false }: BookCardProps) {
+export function BookCard({ book, onBorrow, onDelete, alreadyBorrowed = false, isBorrowLoading = false, isDeleteLoading = false }: BookCardProps) {
   const user = useAuthStore((s) => s.user);
   const isLibrarian = user?.role === "librarian";
   const isMember = user?.role === "member";
@@ -46,7 +48,7 @@ export function BookCard({ book, onBorrow, onDelete, alreadyBorrowed = false }: 
             </Button>
           )}
           {isMember && available && !alreadyBorrowed && onBorrow && (
-            <Button size="sm" onClick={() => onBorrow(book)} className="flex-1">
+            <Button size="sm" isLoading={isBorrowLoading} onClick={() => onBorrow(book)} className="flex-1">
               Borrow
             </Button>
           )}
@@ -61,6 +63,7 @@ export function BookCard({ book, onBorrow, onDelete, alreadyBorrowed = false }: 
                 <Button
                   size="sm"
                   variant="danger"
+                  isLoading={isDeleteLoading}
                   onClick={() => onDelete(book)}
                 >
                   Delete

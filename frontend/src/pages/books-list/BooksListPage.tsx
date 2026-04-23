@@ -27,28 +27,37 @@ export function BooksListPage() {
     ? new Set(borrowingsData.filter((b) => b.returned_at === null).map((b) => b.book_id))
     : new Set<number>();
 
+  const [borrowingBookId, setBorrowingBookId] = useState<number | null>(null);
+  const [deletingBookId, setDeletingBookId] = useState<number | null>(null);
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setPage(1);
   };
 
   const handleBorrow = async (book: Book) => {
+    setBorrowingBookId(book.id);
     try {
       await apiClient.post(`/api/v1/books/${book.id}/borrowings`);
       await mutate("/api/v1/borrowings");
       await mutate((key: unknown) => typeof key === "string" && key.startsWith("/api/v1/books"));
     } catch {
       // error handling omitted; button state will reflect the unchanged available_copies
+    } finally {
+      setBorrowingBookId(null);
     }
   };
 
   const handleDelete = async (book: Book) => {
     if (!confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
+    setDeletingBookId(book.id);
     try {
       await bookApi.delete(book.id);
       await mutate((key: unknown) => typeof key === "string" && key.startsWith("/api/v1/books"));
     } catch {
       // error handling omitted
+    } finally {
+      setDeletingBookId(null);
     }
   };
 
@@ -98,6 +107,8 @@ export function BooksListPage() {
                   onBorrow={isMember ? handleBorrow : undefined}
                   onDelete={isLibrarian ? handleDelete : undefined}
                   alreadyBorrowed={borrowedBookIds.has(book.id)}
+                  isBorrowLoading={borrowingBookId === book.id}
+                  isDeleteLoading={deletingBookId === book.id}
                 />
               ))}
             </div>
