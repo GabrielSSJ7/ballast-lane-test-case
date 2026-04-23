@@ -1,5 +1,5 @@
 module Dashboards
-  class LibrarianStats
+  class FetchLibrarianStats
     def self.call
       new.call
     end

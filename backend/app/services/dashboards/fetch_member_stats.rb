@@ -1,5 +1,5 @@
 module Dashboards
-  class MemberStats
+  class FetchMemberStats
     def self.call(user:)
       new(user: user).call
     end
