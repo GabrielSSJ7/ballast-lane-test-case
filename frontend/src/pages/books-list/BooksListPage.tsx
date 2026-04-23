@@ -5,9 +5,9 @@ import { useAuthStore } from "../../entities/user/model/store";
 import { useBooks } from "../../entities/book/api/useBooks";
 import { useBorrowings } from "../../entities/borrowing/api/useBorrowings";
 import { BookCard } from "../../entities/book/ui/BookCard";
+import { BookCardSkeleton } from "../../entities/book/ui/BookCardSkeleton";
 import { BookSearch } from "../../features/book-search/ui/BookSearch";
 import { Button } from "../../shared/ui/Button";
-import { Spinner } from "../../shared/ui/Spinner";
 import { useDebounce } from "../../shared/hooks/useDebounce";
 import { apiClient } from "../../shared/api/client";
 import { bookApi } from "../../entities/book/api/bookApi";
@@ -81,8 +81,8 @@ export function BooksListPage() {
       </div>
 
       {isLoading && (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <BookCardSkeleton key={i} />)}
         </div>
       )}
 
