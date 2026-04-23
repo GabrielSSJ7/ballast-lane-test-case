@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -e
+
+bundle check || bundle install
+
+bundle exec rails db:prepare
+bundle exec rails db:seed
+
+exec "$@"
