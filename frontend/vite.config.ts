@@ -22,6 +22,8 @@ export default defineConfig({
         "src/main.tsx",
         "src/app/router.tsx",
         "**/*.d.ts",
+        "**/index.ts",
+        "**/types.ts",
       ],
     },
   },

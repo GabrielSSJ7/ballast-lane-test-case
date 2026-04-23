@@ -16,4 +16,14 @@ RSpec.describe BookPolicy, type: :policy do
     it { is_expected.to permit(librarian, book) }
     it { is_expected.not_to permit(member, book) }
   end
+
+  describe "Scope" do
+    let(:user) { create(:user, :member) }
+
+    it "resolves all books" do
+      create_list(:book, 3)
+      scope = BookPolicy::Scope.new(user, Book.all).resolve
+      expect(scope.count).to eq(Book.count)
+    end
+  end
 end

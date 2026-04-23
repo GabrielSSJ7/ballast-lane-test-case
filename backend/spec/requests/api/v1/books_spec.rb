@@ -123,6 +123,16 @@ RSpec.describe "Books API", type: :request do
         as: :json
       expect(response).to have_http_status(:forbidden)
     end
+
+    it "returns 422 when update with blank title fails validation" do
+      patch "/api/v1/books/#{book.id}",
+        params: { book: { title: "" } },
+        headers: auth_headers(librarian),
+        as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      body = JSON.parse(response.body)
+      expect(body).to have_key("errors")
+    end
   end
 
   describe "DELETE /api/v1/books/:id" do
