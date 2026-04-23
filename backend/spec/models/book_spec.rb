@@ -2,11 +2,13 @@ require "rails_helper"
 
 RSpec.describe Book, type: :model do
   describe "validations" do
+    subject { build(:book) }
+
     it { should validate_presence_of(:title) }
     it { should validate_presence_of(:author) }
     it { should validate_presence_of(:genre) }
     it { should validate_presence_of(:isbn) }
-    it { should validate_uniqueness_of(:isbn) }
+    it { should validate_uniqueness_of(:isbn).case_insensitive }
     it { should validate_numericality_of(:total_copies).is_greater_than_or_equal_to(0) }
   end
 

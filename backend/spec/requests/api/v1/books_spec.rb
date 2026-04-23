@@ -126,7 +126,7 @@ RSpec.describe "Books API", type: :request do
   end
 
   describe "DELETE /api/v1/books/:id" do
-    let(:book) { create(:book) }
+    let!(:book) { create(:book) }
 
     it "returns 204 and deletes book as librarian" do
       expect {

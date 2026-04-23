@@ -5,7 +5,7 @@ class Api::V1::Auth::RegistrationsController < Devise::RegistrationsController
     build_resource(sign_up_params)
     resource.save
     if resource.persisted?
-      sign_in(resource)
+      warden.set_user(resource, scope: :user, store: false)
       render json: UserSerializer.new(resource).as_json, status: :created
     else
       render json: { errors: resource.errors }, status: :unprocessable_entity

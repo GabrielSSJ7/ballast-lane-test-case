@@ -1,27 +1,19 @@
 require "rails_helper"
 
 RSpec.describe BookPolicy, type: :policy do
+  subject { described_class }
+
   let(:librarian) { build(:user, :librarian) }
   let(:member) { build(:user, :member) }
   let(:book) { build(:book) }
 
-  describe "librarian permissions" do
-    subject { described_class.new(librarian, book) }
-
-    it { should permit_action(:index) }
-    it { should permit_action(:show) }
-    it { should permit_action(:create) }
-    it { should permit_action(:update) }
-    it { should permit_action(:destroy) }
+  permissions :index?, :show? do
+    it { is_expected.to permit(librarian, book) }
+    it { is_expected.to permit(member, book) }
   end
 
-  describe "member permissions" do
-    subject { described_class.new(member, book) }
-
-    it { should permit_action(:index) }
-    it { should permit_action(:show) }
-    it { should_not permit_action(:create) }
-    it { should_not permit_action(:update) }
-    it { should_not permit_action(:destroy) }
+  permissions :create?, :update?, :destroy? do
+    it { is_expected.to permit(librarian, book) }
+    it { is_expected.not_to permit(member, book) }
   end
 end

@@ -1,8 +1,9 @@
 require "spec_helper"
 
-ENV["RAILS_ENV"] ||= "test"
+ENV["RAILS_ENV"] = "test"
 require_relative "../config/environment"
 require "rspec/rails"
+require "pundit/rspec"
 require "database_cleaner/active_record"
 
 Dir[Rails.root.join("spec/support/**/*.rb")].sort.each { |f| require f }

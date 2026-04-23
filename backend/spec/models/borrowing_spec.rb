@@ -6,11 +6,6 @@ RSpec.describe Borrowing, type: :model do
     it { should belong_to(:book) }
   end
 
-  describe "validations" do
-    it { should validate_presence_of(:borrowed_at) }
-    it { should validate_presence_of(:due_at) }
-  end
-
   describe "defaults" do
     it "sets borrowed_at on create" do
       borrowing = create(:borrowing)

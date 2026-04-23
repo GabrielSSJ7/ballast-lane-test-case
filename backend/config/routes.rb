@@ -18,7 +18,7 @@ Rails.application.routes.draw do
       end
       resources :borrowings, only: [:index] do
         member do
-          patch :return
+          patch "return", action: :return_book
         end
       end
       namespace :dashboard do

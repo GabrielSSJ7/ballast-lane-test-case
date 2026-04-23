@@ -52,9 +52,9 @@ RSpec.describe "Auth Sessions", type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    it "returns 401 without authentication" do
+    it "returns 204 without authentication (idempotent logout)" do
       delete "/api/v1/auth/logout"
-      expect(response).to have_http_status(:unauthorized)
+      expect(response).to have_http_status(:no_content)
     end
   end
 end

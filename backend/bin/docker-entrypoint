@@ -4,6 +4,9 @@ set -e
 bundle check || bundle install
 
 bundle exec rails db:prepare
-bundle exec rails db:seed
+
+if [ "$RAILS_ENV" != "test" ]; then
+  bundle exec rails db:seed
+fi
 
 exec "$@"
